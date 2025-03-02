@@ -10,12 +10,12 @@ public class ManejoCliente implements Runnable{
     private Socket cliente;
     private BufferedWriter bufferedWriter;
     private BufferedReader bufferedReader;
-    private MetodosHilos metodosHilos;
     private MetodosCliente metodosCliente;
 
-    public ManejoCliente(Socket cliente){
+    public ManejoCliente(Socket cliente, String nombreUsuario){
         this.cliente = cliente;
-        crearObjetos();
+        this.nombreUsuario = nombreUsuario;
+        this.metodosCliente = new MetodosCliente();
         listaClientes.add(this);
         try {
             bufferedReader = new BufferedReader(new InputStreamReader(cliente.getInputStream()));
@@ -26,15 +26,13 @@ public class ManejoCliente implements Runnable{
         }
     }
 
-    private void crearObjetos() {
-        metodosHilos = new MetodosHilos();
-        metodosCliente = new MetodosCliente();
-    }
+
 
     @Override
     public void run() {
         try {
-            bufferedWriter.write("¡" + nombreUsuario + " se ha conectado!");
+            metodosCliente.reproduccionDeMensaje(listaClientes,"Servidor", "¡" + nombreUsuario + " se ha conectado!");
+            bufferedReader.readLine();
             while (cliente.isConnected()){
                 mensajeAEnviar = bufferedReader.readLine();
                 metodosCliente.reproduccionDeMensaje(listaClientes, this.nombreUsuario, this.mensajeAEnviar);
