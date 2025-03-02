@@ -18,8 +18,13 @@ public class MetodosCliente {
     }
 
     public int pedirPuerto(Scanner scanner) {
-        System.out.println("Dime el puerto del servidor");
-        return scanner.nextInt();
+        try{
+            System.out.println("Dime el puerto del servidor");
+            return scanner.nextInt();
+        } catch (NumberFormatException e) {
+            System.out.println("Error, ese puerto no vale");
+        }
+        return 0;
     }
 
     public void cerrarTodo(Socket socket, BufferedWriter bufferedWriter, BufferedReader bufferedReader) {
