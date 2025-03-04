@@ -17,6 +17,7 @@ public class ManejoCliente implements Runnable{
         this.nombreUsuario = nombreUsuario;
         this.metodosCliente = new MetodosCliente();
         listaClientes.add(this);
+        Servidor.incrementarClientes();
         try {
             bufferedReader = new BufferedReader(new InputStreamReader(cliente.getInputStream()));
             bufferedWriter = new BufferedWriter(new OutputStreamWriter(cliente.getOutputStream()));
