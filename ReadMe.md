@@ -20,7 +20,6 @@
 
 ## Comandos 🔡
 - help -> muestra los comandos existentes.
-- all -> muestra todos los usuarios existentes.
 - bye -> se desconecta del servidor.
   
 #### Tener en cuenta que algunos comandos solo se mostrarán al cliente que los pone, por lo que solo se podrá enviar el comando sin mensaje y saltará un error si se inteta otra cosa.

@@ -33,7 +33,7 @@ public class MetodosCliente {
 
     public static void cerrarTodo(Socket socket, BufferedWriter bufferedWriter, BufferedReader bufferedReader) {
         try {
-            if (socket != null) {
+            if (socket != null && !socket.isClosed()) {
                 socket.close();
             }
             if (bufferedWriter != null) {
@@ -78,6 +78,7 @@ public class MetodosCliente {
                 if (!cliente.getSocket().isConnected() || cliente.getSocket().isClosed()) {
                     System.out.println("❌ Servidor desconectado. Cerrando cliente...");
                     cerrarTodo(cliente.getSocket(), cliente.getBufferedWriter(), cliente.getBufferedReader());
+                    try{Thread.sleep(1000);}catch (InterruptedException ignore){}
                     System.exit(0);
                 }
                 if(mensaje.equals("/bye")){
@@ -88,8 +89,12 @@ public class MetodosCliente {
                     cerrarTodo(cliente.getSocket(), cliente.getBufferedWriter(), cliente.getBufferedReader());
                     System.exit(0);
                 }
-                else if(mensaje.startsWith("/nickname")){
-
+                else if (mensaje.startsWith("/help")) {
+                    StringBuilder listaComandos = new StringBuilder("Comandos disponibles:\n");
+                    for(String comando : Servidor.getListaComandos()){
+                        listaComandos.append(comando).append("\n");
+                    }
+                    System.out.println(listaComandos);
                 }
                 cliente.getBufferedWriter().write(mensaje);
                 cliente.getBufferedWriter().newLine();

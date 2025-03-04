@@ -41,18 +41,39 @@ public class ManejoCliente implements Runnable{
                 if (verificarMensajeSalida()){
                     System.out.println("🔴 Cliente " + nombreUsuario + " se ha desconectado.");
                     Servidor.decrementarClientes(); // 🔥 Asegurar que el cliente se elimina correctamente
-                    MetodosCliente.cerrarTodo(cliente, bufferedWriter, bufferedReader);
+                    //MetodosCliente.cerrarTodo(cliente, bufferedWriter, bufferedReader);
                     break;
                 }
-                else if(mensajeAEnviar.startsWith("/nickname")){
+                else if (mensajeAEnviar.startsWith("/nickname")) {
                     String[] mensajeDiv = mensajeAEnviar.split(" ", 2);
 
+                    if (mensajeDiv.length < 2 || mensajeDiv[1].trim().isEmpty()) {
+                        // Si el nombre de usuario no es válido o está vacío
+                        try {
+                        bufferedWriter.write("❌ Error: Debes proporcionar un nuevo nombre de usuario.");
+                        bufferedWriter.newLine();
+
+                            bufferedWriter.flush();
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
+                    } else {
+                        // Cambiar el nombre de usuario
+                        String nuevoNombre = mensajeDiv[1].trim();
+                        System.out.println("El cliente ha cambiado su nombre de usuario a: " + nuevoNombre);
+                        nombreUsuario = nuevoNombre; // Cambiar el nombre del usuario
+
+                        // Notificar a todos los demás clientes sobre el cambio
+                        metodosCliente.reproduccionDeMensaje(listaClientes, "Servidor", "El usuario " + nombreUsuario + " ha cambiado su nombre.");
+                        break;
+                    }
                 }
                 metodosCliente.reproduccionDeMensaje(listaClientes, this.nombreUsuario, this.mensajeAEnviar);
             }
         } catch (Exception e) {
             System.out.println(e.getMessage());
         }finally {
+            MetodosCliente.cerrarTodo(this.cliente,this.bufferedWriter,this.bufferedReader);
             metodosCliente.desconexionCliente(listaClientes, this);
             //Servidor.decrementarClientes();
         }

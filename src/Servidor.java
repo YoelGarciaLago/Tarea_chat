@@ -9,7 +9,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class Servidor {
     private static ArrayList <String> listaMensajes = new ArrayList<>();
-    static final int MAX_CLIENTES = 2;
+    static final int MAX_CLIENTES = 3;
     static final AtomicInteger clientesActivos = new AtomicInteger(0);
     private static String[] listaComandos = {"bye: El usuario sale del servidor", "all: muestra a todos los nombres de usuario de los presentes en la sala", "help: muestra todos los comandos"};
 
@@ -24,6 +24,10 @@ public class Servidor {
             System.out.println("Ningún cliente conectado");
         else
             System.out.println("Clientes conectados: " + activos);
+    }
+
+    public static String[] getListaComandos() {
+        return listaComandos;
     }
 
     public static ArrayList<String> getListaMensajes() {
@@ -57,16 +61,15 @@ public class Servidor {
         while (true){
             try {
                 if (clientesActivos.get() >= MAX_CLIENTES) {
+                    System.out.println("❌ Servidor lleno. Rechazando conexión...");
                     Socket clienteRechazado = serverSocket.accept();
                     BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(clienteRechazado.getOutputStream()));
-                    writer.write("Servidor lleno. Inténtalo más tarde.");
                     writer.newLine();
                     writer.flush();
                     writer.close();
                     clienteRechazado.close();
-                    continue; // 🔴 Volver a la espera de otro cliente
+                    continue; // 🔄 Volver a esperar una nueva conexión
                 }
-
                 Socket cliente = serverSocket.accept();
                 BufferedReader reader = new BufferedReader(new InputStreamReader(cliente.getInputStream()));
                 String nombreUsuario = reader.readLine(); // 🔴 Leer el nickname enviado por el cliente

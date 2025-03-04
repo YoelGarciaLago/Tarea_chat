@@ -79,9 +79,22 @@ public class Cliente {
             System.out.println(e.getMessage());
             System.exit(1);
         }
+
+        if(Servidor.clientesActivos.get() >= Servidor.MAX_CLIENTES){
+            System.out.println("Servidor lleno");
+            System.exit(1);
+
+        }
+
         Socket socket1 = null;
         try {
             socket1 = new Socket(ip,puerto);
+            try{Thread.sleep(500);}catch (InterruptedException ignored){}
+            BufferedReader bufferedReader1 = new BufferedReader(new InputStreamReader(socket1.getInputStream()));
+            if(socket1.isClosed()){
+                System.out.println(bufferedReader1.readLine());
+                System.exit(1);
+            }
         }catch (ConnectException e){
             System.out.println("Servidor inactivo o en mantenimiento --> " + e.getMessage());
             System.exit(1);
@@ -89,10 +102,7 @@ public class Cliente {
             System.out.println("Error al conectarse al servidor, revise la ip y el puerto --> " + e.getMessage());
         }
 
-        if(Servidor.clientesActivos.get() >= Servidor.MAX_CLIENTES){
-            System.out.println("Servidor lleno, vuelva más tarde");
-            System.exit(1);
-        }
+
         // 🔴 Enviar el nombre de usuario al servidor antes de cualquier mensaje
         BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(socket1.getOutputStream()));
         writer.write(nickname);
@@ -100,7 +110,6 @@ public class Cliente {
         writer.flush();
 
         Cliente cliente = new Cliente(socket1,nickname);
-        BufferedReader reader = new BufferedReader(cliente.getBufferedReader());
         cliente.getMetodosCliente().escucharMensajes(cliente);
         cliente.getMetodosCliente().envioDeMensaje(cliente, nickname);
     }
