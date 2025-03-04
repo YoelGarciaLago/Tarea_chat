@@ -75,10 +75,21 @@ public class MetodosCliente {
             Scanner scanner = new Scanner(System.in);
             while (cliente.getSocket().isConnected()){
                 String mensaje = scanner.nextLine();
-                if(mensaje.equals("/bye")){
-                    System.out.println("Desconectándose del servidor");
-                    cerrarTodo(cliente.getSocket(),cliente.getBufferedWriter(),cliente.getBufferedReader());
+                if (!cliente.getSocket().isConnected() || cliente.getSocket().isClosed()) {
+                    System.out.println("❌ Servidor desconectado. Cerrando cliente...");
+                    cerrarTodo(cliente.getSocket(), cliente.getBufferedWriter(), cliente.getBufferedReader());
                     System.exit(0);
+                }
+                if(mensaje.equals("/bye")){
+                    cliente.getBufferedWriter().write("/bye");
+                    cliente.getBufferedWriter().newLine();
+                    cliente.getBufferedWriter().flush();
+                    System.out.println("🔴 Desconectándose del servidor...");
+                    cerrarTodo(cliente.getSocket(), cliente.getBufferedWriter(), cliente.getBufferedReader());
+                    System.exit(0);
+                }
+                else if(mensaje.startsWith("/nickname")){
+
                 }
                 cliente.getBufferedWriter().write(mensaje);
                 cliente.getBufferedWriter().newLine();

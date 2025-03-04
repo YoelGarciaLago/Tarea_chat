@@ -2,14 +2,19 @@ import java.io.*;
 import java.net.ConnectException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.net.SocketException;
 import java.util.InputMismatchException;
 import java.util.Scanner;
+import java.util.regex.Pattern;
+
+import static java.lang.Thread.sleep;
 
 public class Cliente {
-
+    private static final String IP_REGEX =
+            "^((25[0-5]|2[0-4][0-9]|1?[0-9][0-9]?)\\.){3}" +
+                    "(25[0-5]|2[0-4][0-9]|1?[0-9][0-9]?)$";
+    private static final Pattern IP_PATTERN = Pattern.compile(IP_REGEX);
     private String nombreUsuario;
-    private String ipServidor;
-    private int puerto;
     private Socket socket;
     private BufferedReader bufferedReader;
     private BufferedWriter bufferedWriter;
@@ -23,8 +28,12 @@ public class Cliente {
             this.bufferedWriter = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
             this.bufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
         } catch (IOException e) {
-            metodosCliente.cerrarTodo(this.socket, this.bufferedWriter, this.bufferedReader);
+            MetodosCliente.cerrarTodo(this.socket, this.bufferedWriter, this.bufferedReader);
         }
+    }
+
+    public void setNombreUsuario(String nombreUsuario) {
+        this.nombreUsuario = nombreUsuario;
     }
 
     public String getNombreUsuario() {
@@ -47,24 +56,18 @@ public class Cliente {
         return metodosCliente;
     }
 
-    public void setMetodosCliente(MetodosCliente metodosCliente) {
-        this.metodosCliente = metodosCliente;
+    public static boolean esIPValida(String ip) {
+        return IP_PATTERN.matcher(ip).matches();
     }
-
 
     public static void main(String[]args) throws IOException {
         Scanner scanner = new Scanner(System.in);
         MetodosCliente metodosCliente1 = new MetodosCliente();
         String nickname = metodosCliente1.pedirNickname(scanner);
         String ip = metodosCliente1.pedirIpServidor(scanner);
-        if(!ip.equals("localhost".trim())){
-            try {
-                int ipInt = Integer.parseInt(ip);
-            }catch (NumberFormatException e){
-                System.out.println("Cadena de texto inválida insertada --> " + e.getMessage());
-                System.exit(1);
-            }
-
+        if (!ip.equals("localhost") && !esIPValida(ip)) {
+            System.out.println("❌ IP inválida, intenta de nuevo.");
+            System.exit(1);
         }
         int puerto = 0;
         try{
@@ -82,8 +85,14 @@ public class Cliente {
         }catch (ConnectException e){
             System.out.println("Servidor inactivo o en mantenimiento --> " + e.getMessage());
             System.exit(1);
+        }catch (SocketException e){
+            System.out.println("Error al conectarse al servidor, revise la ip y el puerto --> " + e.getMessage());
         }
 
+        if(Servidor.clientesActivos.get() >= Servidor.MAX_CLIENTES){
+            System.out.println("Servidor lleno, vuelva más tarde");
+            System.exit(1);
+        }
         // 🔴 Enviar el nombre de usuario al servidor antes de cualquier mensaje
         BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(socket1.getOutputStream()));
         writer.write(nickname);
@@ -91,6 +100,7 @@ public class Cliente {
         writer.flush();
 
         Cliente cliente = new Cliente(socket1,nickname);
+        BufferedReader reader = new BufferedReader(cliente.getBufferedReader());
         cliente.getMetodosCliente().escucharMensajes(cliente);
         cliente.getMetodosCliente().envioDeMensaje(cliente, nickname);
     }

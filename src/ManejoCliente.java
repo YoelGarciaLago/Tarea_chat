@@ -4,7 +4,7 @@ import java.util.ArrayList;
 
 public class ManejoCliente implements Runnable{
 
-    private static ArrayList<ManejoCliente> listaClientes = new ArrayList<>();
+    public static ArrayList<ManejoCliente> listaClientes = new ArrayList<>();
     private String nombreUsuario;
     private String mensajeAEnviar;
     private Socket cliente;
@@ -26,7 +26,9 @@ public class ManejoCliente implements Runnable{
             System.out.println("Error al crear los objetos --> " + e.getMessage());
         }
     }
-
+    public void ponerNombreUsuario(String newNickname){
+        this.setNombreUsuario(newNickname);
+    }
 
 
     @Override
@@ -37,8 +39,14 @@ public class ManejoCliente implements Runnable{
             while (cliente.isConnected()){
                 mensajeAEnviar = bufferedReader.readLine();
                 if (verificarMensajeSalida()){
-                    metodosCliente.reproduccionDeMensaje(listaClientes, "Servidor", nombreUsuario + " se va a desconectar - Usuarios restantes: " + (Servidor.clientesActivos.get() - 1));
+                    System.out.println("🔴 Cliente " + nombreUsuario + " se ha desconectado.");
+                    Servidor.decrementarClientes(); // 🔥 Asegurar que el cliente se elimina correctamente
+                    MetodosCliente.cerrarTodo(cliente, bufferedWriter, bufferedReader);
                     break;
+                }
+                else if(mensajeAEnviar.startsWith("/nickname")){
+                    String[] mensajeDiv = mensajeAEnviar.split(" ", 2);
+
                 }
                 metodosCliente.reproduccionDeMensaje(listaClientes, this.nombreUsuario, this.mensajeAEnviar);
             }
@@ -46,13 +54,17 @@ public class ManejoCliente implements Runnable{
             System.out.println(e.getMessage());
         }finally {
             metodosCliente.desconexionCliente(listaClientes, this);
-            Servidor.decrementarClientes();
+            //Servidor.decrementarClientes();
         }
 
     }
 
     private boolean verificarMensajeSalida() {
         return mensajeAEnviar == null || mensajeAEnviar.equals("/bye".trim());
+    }
+
+    public void setNombreUsuario(String nombreUsuario) {
+        this.nombreUsuario = nombreUsuario;
     }
 
     public String getNombreUsuario() {
@@ -74,4 +86,6 @@ public class ManejoCliente implements Runnable{
     public Socket getCliente() {
         return cliente;
     }
+
+
 }

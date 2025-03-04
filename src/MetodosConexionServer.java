@@ -24,8 +24,8 @@ public class MetodosConexionServer {
         }
     }
 
-    public void bindAlPuerto(int puerto, ServerSocket serverSocket){
-        InetSocketAddress inetSocketAddress = new InetSocketAddress("localhost", puerto);
+    public void bindAlPuerto(int puerto, String ip, ServerSocket serverSocket){
+        InetSocketAddress inetSocketAddress = new InetSocketAddress(ip, puerto);
         try {
             serverSocket.bind(inetSocketAddress);
         } catch (IOException e) {
