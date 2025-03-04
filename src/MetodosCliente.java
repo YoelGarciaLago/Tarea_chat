@@ -4,8 +4,13 @@ import java.io.IOException;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Scanner;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class MetodosCliente {
+
+    private final ExecutorService hilosLectura = Executors.newFixedThreadPool(3);
 
     public String pedirNickname(Scanner scanner) {
         System.out.println("Dime tu nickname");
@@ -27,7 +32,7 @@ public class MetodosCliente {
         return 0;
     }
 
-    public void cerrarTodo(Socket socket, BufferedWriter bufferedWriter, BufferedReader bufferedReader) {
+    public static void cerrarTodo(Socket socket, BufferedWriter bufferedWriter, BufferedReader bufferedReader) {
         try {
             if (socket != null) {
                 socket.close();
@@ -45,10 +50,15 @@ public class MetodosCliente {
 
 
     public void reproduccionDeMensaje(ArrayList<ManejoCliente> listaClientes, String nombreUsuario, String mensaje) {
+        if(mensaje.trim().isBlank()){
+            return;
+        }
+        String mensajeFormado = nombreUsuario + ": " + mensaje;
+        Servidor.getListaMensajes().add(mensajeFormado);
         for (ManejoCliente clienteRegistrado : listaClientes) {
-            if (!clienteRegistrado.getNombreUsuario().equals(nombreUsuario)) {
+            if ( nombreUsuario.equals("Servidor")|| !clienteRegistrado.getNombreUsuario().equals(nombreUsuario)) {
                 try {
-                    clienteRegistrado.getBufferedWriter().write(mensaje);
+                    clienteRegistrado.getBufferedWriter().write(mensajeFormado);
                     clienteRegistrado.getBufferedWriter().newLine();
                     clienteRegistrado.getBufferedWriter().flush();
                 } catch (IOException e) {
@@ -66,7 +76,7 @@ public class MetodosCliente {
             Scanner scanner = new Scanner(System.in);
             while (cliente.getSocket().isConnected()){
                 String mensaje = scanner.nextLine();
-                cliente.getBufferedWriter().write(nombreUsuario);
+                cliente.getBufferedWriter().write(mensaje);
                 cliente.getBufferedWriter().newLine();
                 cliente.getBufferedWriter().flush();
             }
@@ -76,12 +86,29 @@ public class MetodosCliente {
 
     }
 
-
+    public void escucharMensajes(Cliente cliente) {
+        hilosLectura.execute(() -> {
+            try {
+                BufferedReader reader = cliente.getBufferedReader();
+                String mensaje;
+                while (cliente.getSocket().isConnected()) {
+                    mensaje = reader.readLine();
+                    if (mensaje == null) {
+                        break;
+                    }
+                    System.out.println(mensaje);
+                }
+            } catch (IOException e) {
+                cerrarTodo(cliente.getSocket(), cliente.getBufferedWriter(), cliente.getBufferedReader());
+            }
+        });
+    }
 
 
     public void desconexionCliente(ArrayList<ManejoCliente> listaClientes, ManejoCliente usuario) {
         listaClientes.remove(usuario);
-        reproduccionDeMensaje(listaClientes, usuario.getNombreUsuario(), " ha abandonado la sala");
+        Servidor.decrementarClientes();
+        reproduccionDeMensaje(listaClientes, usuario.getNombreUsuario(), "ha abandonado la sala");
     }
 
 }
