@@ -32,17 +32,27 @@ public class ManejoCliente implements Runnable{
     @Override
     public void run() {
         try {
-            metodosCliente.reproduccionDeMensaje(listaClientes,"Servidor", "¡" + nombreUsuario + " se ha conectado!");
+            metodosCliente.reproduccionDeMensaje(listaClientes,"Servidor", "¡" + nombreUsuario + " se ha conectado! - Usuarios conectados: " + Servidor.clientesActivos.get());
             bufferedReader.readLine();
             while (cliente.isConnected()){
                 mensajeAEnviar = bufferedReader.readLine();
+                if (verificarMensajeSalida()){
+                    metodosCliente.reproduccionDeMensaje(listaClientes, "Servidor", nombreUsuario + " se va a desconectar - Usuarios restantes: " + (Servidor.clientesActivos.get() - 1));
+                    break;
+                }
                 metodosCliente.reproduccionDeMensaje(listaClientes, this.nombreUsuario, this.mensajeAEnviar);
             }
         } catch (Exception e) {
             System.out.println(e.getMessage());
+        }finally {
             metodosCliente.desconexionCliente(listaClientes, this);
+            Servidor.decrementarClientes();
         }
 
+    }
+
+    private boolean verificarMensajeSalida() {
+        return mensajeAEnviar == null || mensajeAEnviar.equals("/bye".trim());
     }
 
     public String getNombreUsuario() {

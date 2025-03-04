@@ -4,13 +4,12 @@ import java.io.IOException;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Scanner;
-import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class MetodosCliente {
 
-    private final ExecutorService hilosLectura = Executors.newFixedThreadPool(3);
+    private final ExecutorService hilosLectura = Executors.newFixedThreadPool(2);
 
     public String pedirNickname(Scanner scanner) {
         System.out.println("Dime tu nickname");
@@ -76,6 +75,11 @@ public class MetodosCliente {
             Scanner scanner = new Scanner(System.in);
             while (cliente.getSocket().isConnected()){
                 String mensaje = scanner.nextLine();
+                if(mensaje.equals("/bye")){
+                    System.out.println("Desconectándose del servidor");
+                    cerrarTodo(cliente.getSocket(),cliente.getBufferedWriter(),cliente.getBufferedReader());
+                    System.exit(0);
+                }
                 cliente.getBufferedWriter().write(mensaje);
                 cliente.getBufferedWriter().newLine();
                 cliente.getBufferedWriter().flush();
@@ -107,8 +111,12 @@ public class MetodosCliente {
 
     public void desconexionCliente(ArrayList<ManejoCliente> listaClientes, ManejoCliente usuario) {
         listaClientes.remove(usuario);
-        Servidor.decrementarClientes();
         reproduccionDeMensaje(listaClientes, usuario.getNombreUsuario(), "ha abandonado la sala");
+        try {
+            usuario.getCliente().setKeepAlive(false);
+        } catch (IOException e) {
+            System.out.println("Error al cerrar el cliente -->" + e.getMessage());
+        }
     }
 
 }

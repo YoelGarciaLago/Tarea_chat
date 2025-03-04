@@ -56,16 +56,25 @@ public class Cliente {
         MetodosCliente metodosCliente1 = new MetodosCliente();
         String nickname = metodosCliente1.pedirNickname(scanner);
         String ip = metodosCliente1.pedirIpServidor(scanner);
+        if(!ip.equals("localhost".trim())){
+            try {
+                int ipInt = Integer.parseInt(ip);
+            }catch (NumberFormatException e){
+                System.out.println("Cadena de texto inválida insertada --> " + e.getMessage());
+                System.exit(1);
+            }
+
+        }
         int puerto = metodosCliente1.pedirPuerto(scanner);
         if(puerto == 0){
-            System.exit(130);
+            System.exit(1);
         }
         Socket socket1 = null;
         try {
             socket1 = new Socket(ip,puerto);
         }catch (ConnectException e){
             System.out.println("Servidor inactivo o en mantenimiento --> " + e.getMessage());
-            System.exit(130);
+            System.exit(1);
         }
 
         // 🔴 Enviar el nombre de usuario al servidor antes de cualquier mensaje
@@ -75,7 +84,6 @@ public class Cliente {
         writer.flush();
 
         Cliente cliente = new Cliente(socket1,nickname);
-        //cliente.listenMessages();
         cliente.getMetodosCliente().escucharMensajes(cliente);
         cliente.getMetodosCliente().envioDeMensaje(cliente, nickname);
     }
