@@ -42,7 +42,42 @@ public class Cliente {
         return bufferedWriter;
     }
 
-    public static void main(String[]args){
+    public MetodosCliente getMetodosCliente() {
+        return metodosCliente;
+    }
+
+    public void setMetodosCliente(MetodosCliente metodosCliente) {
+        this.metodosCliente = metodosCliente;
+    }
+
+
+    public static void main(String[]args) throws IOException {
+        Scanner scanner = new Scanner(System.in);
+        MetodosCliente metodosCliente1 = new MetodosCliente();
+        String nickname = metodosCliente1.pedirNickname(scanner);
+        String ip = metodosCliente1.pedirIpServidor(scanner);
+        int puerto = metodosCliente1.pedirPuerto(scanner);
+        if(puerto == 0){
+            System.exit(130);
+        }
+        Socket socket1 = null;
+        try {
+            socket1 = new Socket(ip,puerto);
+        }catch (ConnectException e){
+            System.out.println("Servidor inactivo o en mantenimiento --> " + e.getMessage());
+            System.exit(130);
+        }
+
+        // 🔴 Enviar el nombre de usuario al servidor antes de cualquier mensaje
+        BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(socket1.getOutputStream()));
+        writer.write(nickname);
+        writer.newLine();
+        writer.flush();
+
+        Cliente cliente = new Cliente(socket1,nickname);
+        //cliente.listenMessages();
+        cliente.getMetodosCliente().escucharMensajes(cliente);
+        cliente.getMetodosCliente().envioDeMensaje(cliente, nickname);
     }
 
 
