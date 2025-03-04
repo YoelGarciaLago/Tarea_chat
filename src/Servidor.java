@@ -22,7 +22,10 @@ public class Servidor {
 
     public static void decrementarClientes() {
         int activos = clientesActivos.decrementAndGet();
-        System.out.println("Clientes conectados: " + activos);
+        if(activos == 0)
+            System.out.println("Ningún cliente conectado");
+        else
+            System.out.println("Clientes conectados: " + activos);
     }
 
     public static ArrayList<String> getListaMensajes() {
