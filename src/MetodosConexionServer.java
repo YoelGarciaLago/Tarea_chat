@@ -1,13 +1,12 @@
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
+import java.util.Scanner;
 
 public class MetodosConexionServer {
-
     public ServerSocket crearServer(){
         ServerSocket serverSocket = null;
         try {
-        System.out.println("Creando servidor");
         serverSocket = new ServerSocket();
 
         } catch (IOException e) {
@@ -27,11 +26,34 @@ public class MetodosConexionServer {
 
     public void bindAlPuerto(int puerto, ServerSocket serverSocket){
         InetSocketAddress inetSocketAddress = new InetSocketAddress("localhost", puerto);
-        System.out.println("Realizando el bind");
         try {
             serverSocket.bind(inetSocketAddress);
         } catch (IOException e) {
             System.out.println("Error al hacer el bind -> " + e.getMessage());
         }
     }
+
+    public static int pedirPuertoServidor(Scanner scanner) {
+        int puerto;
+
+        while (true) {
+            System.out.println("Introduce un puerto (1024 - 65535):");
+
+            if (scanner.hasNextInt()) {
+                puerto = scanner.nextInt();
+                scanner.nextLine(); // Limpiar el buffer
+
+                if (puerto >= 1024 && puerto <= 65535) {
+                    return puerto; // ✅ Puerto válido
+                } else {
+                    System.out.println("❌ El puerto debe estar entre 1024 y 65535.");
+                }
+            } else {
+                System.out.println("❌ Entrada no válida. Introduce un número.");
+                scanner.nextLine(); // Limpiar la entrada incorrecta
+            }
+        }
+    }
+
+
 }

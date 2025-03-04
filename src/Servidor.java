@@ -5,11 +5,25 @@ import java.io.InputStreamReader;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
-import java.util.concurrent.ExecutorService;
+import java.util.Scanner;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class Servidor {
     private static ArrayList <String> listaMensajes = new ArrayList<>();
+    static final AtomicInteger clientesActivos = new AtomicInteger(0);
+    private static String[] listaComandos = {"bye: El usuario sale del servidor", "all: muestra a todos los nombres de usuario de los presentes en la sala", "help: muestra todos los comandos"};
+
+    public static void incrementarClientes() {
+        int activos = clientesActivos.incrementAndGet();
+        System.out.println("Clientes conectados: " + activos);
+    }
+
+    public static void decrementarClientes() {
+        int activos = clientesActivos.decrementAndGet();
+        System.out.println("Clientes conectados: " + activos);
+    }
 
     public static ArrayList<String> getListaMensajes() {
         return listaMensajes;
@@ -32,12 +46,14 @@ public class Servidor {
     }
     public static void main(String[]args){
 
+        final int MAX_CLIENTES = 2;
         MetodosConexionServer metodosConexionServer = new MetodosConexionServer();
         ServerSocket serverSocket = metodosConexionServer.crearServer();
-        metodosConexionServer.bindAlPuerto(6666,serverSocket);
+        int puertoServer = MetodosConexionServer.pedirPuertoServidor(new Scanner(System.in));
+        metodosConexionServer.bindAlPuerto(puertoServer,serverSocket);
 
-
-        ExecutorService hilosCliente = Executors.newFixedThreadPool(3);
+        ThreadPoolExecutor hilosCliente = (ThreadPoolExecutor) Executors.newFixedThreadPool(MAX_CLIENTES);
+        System.out.println("Aceptando conexiones");
         while (true){
             try {
                 Socket cliente = serverSocket.accept();
