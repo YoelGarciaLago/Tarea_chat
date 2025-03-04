@@ -2,6 +2,7 @@ import java.io.*;
 import java.net.ConnectException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.util.InputMismatchException;
 import java.util.Scanner;
 
 public class Cliente {
@@ -65,8 +66,14 @@ public class Cliente {
             }
 
         }
-        int puerto = metodosCliente1.pedirPuerto(scanner);
-        if(puerto == 0){
+        int puerto = 0;
+        try{
+            puerto = metodosCliente1.pedirPuerto(scanner);
+            if(puerto == 0){
+                System.exit(1);
+            }
+        }catch (InputMismatchException e){
+            System.out.println(e.getMessage());
             System.exit(1);
         }
         Socket socket1 = null;
