@@ -52,8 +52,7 @@ public class ManejoCliente implements Runnable{
                         try {
                         bufferedWriter.write("❌ Error: Debes proporcionar un nuevo nombre de usuario.");
                         bufferedWriter.newLine();
-
-                            bufferedWriter.flush();
+                        bufferedWriter.flush();
                         } catch (IOException e) {
                             throw new RuntimeException(e);
                         }
@@ -67,6 +66,15 @@ public class ManejoCliente implements Runnable{
                         metodosCliente.reproduccionDeMensaje(listaClientes, "Servidor", "El usuario " + nombreUsuario + " ha cambiado su nombre.");
                         break;
                     }
+                }
+                else if (mensajeAEnviar.startsWith("/all")){
+                    StringBuilder listaUsuarios = new StringBuilder("Usuarios conectados:\n");
+                    for(ManejoCliente manejoCliente : listaClientes){
+                        listaUsuarios.append(manejoCliente.nombreUsuario).append("\n");
+                    }
+                    bufferedWriter.write(listaUsuarios.toString());
+                    bufferedWriter.newLine();
+                    bufferedWriter.flush();
                 }
                 metodosCliente.reproduccionDeMensaje(listaClientes, this.nombreUsuario, this.mensajeAEnviar);
             }
