@@ -26,10 +26,6 @@ public class ManejoCliente implements Runnable{
             System.out.println("Error al crear los objetos --> " + e.getMessage());
         }
     }
-    public void ponerNombreUsuario(String newNickname){
-        this.setNombreUsuario(newNickname);
-    }
-
 
     @Override
     public void run() {
@@ -39,53 +35,70 @@ public class ManejoCliente implements Runnable{
             while (cliente.isConnected()){
                 mensajeAEnviar = bufferedReader.readLine();
                 if (verificarMensajeSalida()){
-                    System.out.println("🔴 Cliente " + nombreUsuario + " se ha desconectado.");
-                    Servidor.decrementarClientes(); // 🔥 Asegurar que el cliente se elimina correctamente
-                    //MetodosCliente.cerrarTodo(cliente, bufferedWriter, bufferedReader);
+                    expulsarCliente();
                     break;
                 }
                 else if (mensajeAEnviar.startsWith("/nickname")) {
                     String[] mensajeDiv = mensajeAEnviar.split(" ", 2);
 
                     if (mensajeDiv.length < 2 || mensajeDiv[1].trim().isEmpty()) {
-                        // Si el nombre de usuario no es válido o está vacío
-                        try {
-                        bufferedWriter.write("❌ Error: Debes proporcionar un nuevo nombre de usuario.");
-                        bufferedWriter.newLine();
-                        bufferedWriter.flush();
-                        } catch (IOException e) {
-                            throw new RuntimeException(e);
-                        }
+                        cambioNombreInvalido();
                     } else {
-                        // Cambiar el nombre de usuario
-                        String nuevoNombre = mensajeDiv[1].trim();
-                        System.out.println("El cliente ha cambiado su nombre de usuario a: " + nuevoNombre);
-                        nombreUsuario = nuevoNombre; // Cambiar el nombre del usuario
-
-                        // Notificar a todos los demás clientes sobre el cambio
-                        metodosCliente.reproduccionDeMensaje(listaClientes, "Servidor", "El usuario " + nombreUsuario + " ha cambiado su nombre.");
+                        cambioDeNombre(mensajeDiv);
                         break;
                     }
                 }
                 else if (mensajeAEnviar.startsWith("/all")){
-                    StringBuilder listaUsuarios = new StringBuilder("Usuarios conectados:\n");
-                    for(ManejoCliente manejoCliente : listaClientes){
-                        listaUsuarios.append(manejoCliente.nombreUsuario).append("\n");
-                    }
-                    bufferedWriter.write(listaUsuarios.toString());
-                    bufferedWriter.newLine();
-                    bufferedWriter.flush();
+                    envioDeNombresUsuarios();
                 }
                 metodosCliente.reproduccionDeMensaje(listaClientes, this.nombreUsuario, this.mensajeAEnviar);
             }
         } catch (Exception e) {
             System.out.println(e.getMessage());
         }finally {
-            MetodosCliente.cerrarTodo(this.cliente,this.bufferedWriter,this.bufferedReader);
-            metodosCliente.desconexionCliente(listaClientes, this);
-            //Servidor.decrementarClientes();
+            desconexionCliente();
         }
+    }
 
+    private void desconexionCliente() {
+        MetodosCliente.cerrarTodo(this.cliente,this.bufferedWriter,this.bufferedReader);
+        metodosCliente.desconexionCliente(listaClientes, this);
+    }
+
+    private void cambioNombreInvalido() {
+        // Si el nombre de usuario no es válido o está vacío
+        try {
+        bufferedWriter.write("❌ Error: Debes proporcionar un nuevo nombre de usuario.");
+        bufferedWriter.newLine();
+        bufferedWriter.flush();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void envioDeNombresUsuarios() throws IOException {
+        StringBuilder listaUsuarios = new StringBuilder("Usuarios conectados:\n");
+        for(ManejoCliente manejoCliente : listaClientes){
+            listaUsuarios.append(manejoCliente.nombreUsuario).append("\n");
+        }
+        bufferedWriter.write(listaUsuarios.toString());
+        bufferedWriter.newLine();
+        bufferedWriter.flush();
+    }
+
+    private void cambioDeNombre(String[] mensajeDiv) {
+        // Cambiar el nombre de usuario
+        String nuevoNombre = mensajeDiv[1].trim();
+        System.out.println("El cliente ha cambiado su nombre de usuario a: " + nuevoNombre);
+        nombreUsuario = nuevoNombre; // Cambiar el nombre del usuario
+
+        // Notificar a todos los demás clientes sobre el cambio
+        metodosCliente.reproduccionDeMensaje(listaClientes, "Servidor", "El usuario " + nombreUsuario + " ha cambiado su nombre.");
+    }
+
+    private void expulsarCliente() {
+        System.out.println("🔴 Cliente " + nombreUsuario + " se ha desconectado.");
+        Servidor.decrementarClientes(); // 🔥 Asegurar que el cliente se elimina correctamente
     }
 
     private boolean verificarMensajeSalida() {

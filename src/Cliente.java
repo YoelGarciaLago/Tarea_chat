@@ -32,14 +32,6 @@ public class Cliente {
         }
     }
 
-    public void setNombreUsuario(String nombreUsuario) {
-        this.nombreUsuario = nombreUsuario;
-    }
-
-    public String getNombreUsuario() {
-        return nombreUsuario;
-    }
-
     public Socket getSocket() {
         return socket;
     }
@@ -70,15 +62,7 @@ public class Cliente {
             System.exit(1);
         }
         int puerto = 0;
-        try{
-            puerto = metodosCliente1.pedirPuerto(scanner);
-            if(puerto == 0){
-                System.exit(1);
-            }
-        }catch (InputMismatchException e){
-            System.out.println(e.getMessage());
-            System.exit(1);
-        }
+        puerto = adicionPuertoCliente(puerto, metodosCliente1, scanner);
 
         if(Servidor.clientesActivos.get() >= Servidor.MAX_CLIENTES){
             System.out.println("Servidor lleno");
@@ -87,8 +71,22 @@ public class Cliente {
         }
 
         Socket socket1 = null;
+        socket1 = creacionSocketYConexion(socket1, ip, puerto);
+
+        envioNombreUsuario(socket1, nickname);
+
+        adicionClienteServer(socket1, nickname);
+    }
+
+    private static void adicionClienteServer(Socket socket1, String nickname) {
+        Cliente cliente = new Cliente(socket1, nickname);
+        cliente.getMetodosCliente().escucharMensajes(cliente);
+        cliente.getMetodosCliente().envioDeMensaje(cliente, nickname);
+    }
+
+    private static Socket creacionSocketYConexion(Socket socket1, String ip, int puerto) throws IOException {
         try {
-            socket1 = new Socket(ip,puerto);
+            socket1 = new Socket(ip, puerto);
             try{Thread.sleep(500);}catch (InterruptedException ignored){}
             BufferedReader bufferedReader1 = new BufferedReader(new InputStreamReader(socket1.getInputStream()));
             if(socket1.isClosed()){
@@ -101,19 +99,29 @@ public class Cliente {
         }catch (SocketException e){
             System.out.println("Error al conectarse al servidor, revise la ip y el puerto --> " + e.getMessage());
         }
+        return socket1;
+    }
 
-
+    private static void envioNombreUsuario(Socket socket1, String nickname) throws IOException {
         // 🔴 Enviar el nombre de usuario al servidor antes de cualquier mensaje
         BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(socket1.getOutputStream()));
         writer.write(nickname);
         writer.newLine();
         writer.flush();
-
-        Cliente cliente = new Cliente(socket1,nickname);
-        cliente.getMetodosCliente().escucharMensajes(cliente);
-        cliente.getMetodosCliente().envioDeMensaje(cliente, nickname);
     }
 
+    private static int adicionPuertoCliente(int puerto, MetodosCliente metodosCliente1, Scanner scanner) {
+        try{
+            puerto = metodosCliente1.pedirPuerto(scanner);
+            if(puerto == 0){
+                System.exit(1);
+            }
+        }catch (InputMismatchException e){
+            System.out.println(e.getMessage());
+            System.exit(1);
+        }
+        return puerto;
+    }
 
 
 }

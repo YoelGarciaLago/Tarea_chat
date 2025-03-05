@@ -11,7 +11,10 @@ public class Servidor {
     private static ArrayList <String> listaMensajes = new ArrayList<>();
     static final int MAX_CLIENTES = 3;
     static final AtomicInteger clientesActivos = new AtomicInteger(0);
-    private static String[] listaComandos = {"bye: El usuario sale del servidor", "all: muestra a todos los nombres de usuario de los presentes en la sala", "help: muestra todos los comandos"};
+    private static String[] listaComandos = {"bye: El usuario sale del servidor",
+            "all: muestra a todos los nombres de usuario de los presentes en la sala",
+            "nickname: cambia tu nombre de usuario actual por el que tú pongas",
+            "help: muestra todos los comandos"};
 
     public static void incrementarClientes() {
         int activos = clientesActivos.incrementAndGet();
@@ -49,7 +52,6 @@ public class Servidor {
     }
     public static void main(String[]args){
 
-
         MetodosConexionServer metodosConexionServer = new MetodosConexionServer();
         ServerSocket serverSocket = metodosConexionServer.crearServer();
         int puertoServer = MetodosConexionServer.pedirPuertoServidor(new Scanner(System.in));
@@ -61,24 +63,10 @@ public class Servidor {
         while (true){
             try {
                 if (clientesActivos.get() >= MAX_CLIENTES) {
-                    System.out.println("❌ Servidor lleno. Rechazando conexión...");
-                    Socket clienteRechazado = serverSocket.accept();
-                    BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(clienteRechazado.getOutputStream()));
-                    writer.newLine();
-                    writer.flush();
-                    writer.close();
-                    clienteRechazado.close();
-                    continue; // 🔄 Volver a esperar una nueva conexión
+                    rechazarCliente(serverSocket);
+                    continue;
                 }
-                Socket cliente = serverSocket.accept();
-                BufferedReader reader = new BufferedReader(new InputStreamReader(cliente.getInputStream()));
-                String nombreUsuario = reader.readLine(); // 🔴 Leer el nickname enviado por el cliente
-
-                System.out.println("Nuevo cliente conectado");
-                ManejoCliente nuevoCliente = new ManejoCliente(cliente, nombreUsuario);
-                
-                Servidor.enviarHistorialMensajes(Servidor.getListaMensajes(),nuevoCliente);
-                hilosCliente.execute(nuevoCliente);
+                añadirClienteServidor(serverSocket, hilosCliente);
 
             } catch (IOException e) {
                 metodosConexionServer.closeServer(serverSocket);
@@ -88,6 +76,27 @@ public class Servidor {
         metodosConexionServer.closeServer(serverSocket);
 
 
+    }
+
+    private static void añadirClienteServidor(ServerSocket serverSocket, ThreadPoolExecutor hilosCliente) throws IOException {
+        Socket cliente = serverSocket.accept();
+        BufferedReader reader = new BufferedReader(new InputStreamReader(cliente.getInputStream()));
+        String nombreUsuario = reader.readLine();
+        System.out.println("Nuevo cliente conectado");
+        ManejoCliente nuevoCliente = new ManejoCliente(cliente, nombreUsuario);
+
+        Servidor.enviarHistorialMensajes(Servidor.getListaMensajes(),nuevoCliente);
+        hilosCliente.execute(nuevoCliente);
+    }
+
+    private static void rechazarCliente(ServerSocket serverSocket) throws IOException {
+        System.out.println("❌ Servidor lleno. Rechazando conexión...");
+        Socket clienteRechazado = serverSocket.accept();
+        /*BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(clienteRechazado.getOutputStream()));
+        writer.newLine();
+        writer.flush();
+        writer.close();*/
+        clienteRechazado.close();
     }
 
 
